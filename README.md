@@ -58,23 +58,11 @@ Optionale Funktionen können einzeln ausgewählt werden.
 
 ### Nur prüfen – ohne Änderungen
 
-Vor allem für bestehende produktive KeyHelp-Systeme gedacht:
-
 ```bash
 ./install.sh --check
 ```
 
-Der Check-Modus verändert **nichts** und prüft unter anderem:
-
-- Debian 13
-- KeyHelp-Datenbank und benötigte `mail_users`-Spalten
-- Apache, Postfix, Dovecot und MariaDB
-- vorhandene SOGo-Pakete und Konfigurationen
-- vorhandene `sogo`-Datenbank / DB-Benutzer
-- TCP-Port 20000
-- Sieve-Port 4190
-- Anzahl aktivierter KeyHelp-Mailboxen
-- Server-FQDN und das aktuell ausgelieferte TLS-Zertifikat
+Der Check-Modus verändert **nichts** und prüft unter anderem Debian 13, KeyHelp-Schema, Dienste, vorhandene SOGo-Reste, Ports, Mailbox-Anzahl, FQDN und TLS-Zertifikat.
 
 ### SOGo wieder entfernen
 
@@ -84,7 +72,27 @@ Der Check-Modus verändert **nichts** und prüft unter anderem:
 
 Der Uninstall-Modus entfernt die durch dieses Projekt eingerichtete SOGo-Integration wieder und lässt **KeyHelp, Postfix, Dovecot, Rspamd, Domains und Mailboxen unangetastet**.
 
-Vor dem Entfernen werden vorhandene SOGo-/Apache-Konfigurationen und die SOGo-Zugangsdaten nochmals gesichert. SOPE-Abhängigkeitsbibliotheken werden absichtlich nicht automatisch entfernt.
+## Adressbuch-Sichtbarkeit pro Mailbox
+
+Zusätzlich gibt es `directory.sh` zur Verwaltung der Sichtbarkeit einzelner KeyHelp-Mailboxen im gemeinsamen SOGo-Verzeichnis.
+
+**Standard ist PRIVATE.** Eine Adresse wird erst nach expliziter Freigabe für das Verzeichnis markiert.
+
+```bash
+chmod +x directory.sh
+./directory.sh init
+./directory.sh list
+./directory.sh show bjoern@example.com
+./directory.sh hide secret@example.com
+./directory.sh status bjoern@example.com
+```
+
+Beispielziel:
+
+- `bjoern@familieflessing.de` → sichtbar innerhalb der eigenen SOGo-Domain
+- `erotik@familieflessing.de` → privat / nicht im Verzeichnis
+
+Wichtig: Die per-Mailbox-Freigabe ist bereits als Verwaltungsschicht vorhanden. Die **Domain-Isolation selbst wird bewusst noch nicht automatisch durch den Installer aktiviert**, weil SOGos Multi-Domain-Modus interne Benutzerkennungen beeinflussen kann. Diese Funktion soll zuerst auf einer frischen Testinstallation validiert werden, bevor sie als sicherer Installer-Default übernommen wird.
 
 ## Von mir getestet
 
@@ -103,42 +111,26 @@ Folgende Funktionen habe ich erfolgreich getestet:
 
 - Login mit einem bestehenden KeyHelp-Mailkonto
 - SOGo Webmail
-- Mail-Empfang über den bestehenden KeyHelp-/Postfix-/Dovecot-Stack
-- Mail-Versand über den bestehenden KeyHelp-/Postfix-Stack
+- Mail-Empfang
+- Mail-Versand
 - Kalender
 - Kontakte
 - Sieve / Filter
 - Vacation / Abwesenheitsnotiz
 - Weiterleitungen
 - ActiveSync-Endpunkt und Authentifizierung
-- ActiveSync auf einem Mobilgerät nach Umstellung des Serverzertifikats auf ein öffentlich vertrauenswürdiges Zertifikat
+- ActiveSync auf einem Mobilgerät
 - vollständige Entfernung von SOGo und anschließende Neuinstallation über dieses Script
 
-Der Installer lief bei diesem Clean-Test bis zu den Health Checks vollständig durch und erkannte die vorhandenen KeyHelp-Mailboxen korrekt.
-
 ## Installation
-
-KeyHelp muss bereits installiert sein und funktionieren.
 
 ```bash
 git clone https://github.com/worker2000/debian13-keyhelp-SOGo.git
 cd debian13-keyhelp-SOGo
 chmod +x install.sh
-```
-
-Optional zuerst nur prüfen:
-
-```bash
 ./install.sh --check
-```
-
-Installation starten:
-
-```bash
 ./install.sh
 ```
-
-Beim Start kann die Sprache **Deutsch oder English** gewählt werden. Danach wird das gewünschte Installationsprofil abgefragt.
 
 ## Authentifizierung
 
@@ -160,32 +152,14 @@ Die getestete KeyHelp-Installation verwendet bcrypt-Passworthashes (`$2y$...`), 
 
 ## URLs
 
-SOGo:
-
 ```text
 https://SERVER-FQDN/SOGo
-```
-
-Mit ActiveSync:
-
-```text
 https://SERVER-FQDN/Microsoft-Server-ActiveSync
 ```
 
 ## TLS / Let's Encrypt
 
-Für ActiveSync und viele mobile Clients wird ein öffentlich vertrauenswürdiges TLS-Zertifikat benötigt.
-
-In KeyHelp kann der Server-FQDN über die SSL/TLS-Einstellungen für die Serverdienste mit einem Let's-Encrypt-Zertifikat abgesichert werden. Der FQDN muss vorher öffentlich korrekt auf den Server zeigen.
-
-## Hinweise
-
-- Vorher Backup/Snapshot erstellen.
-- Auf Bestandssystemen zuerst `./install.sh --check` verwenden.
-- Updates von KeyHelp oder SOGo zuerst auf einem Testsystem prüfen.
-- Das Script installiert **nicht KeyHelp selbst**.
-- Bestehende SOGo-/Apache-Konfigurationen werden vor dem Überschreiben gesichert.
-- Die SOGo-Datenbankzugangsdaten werden automatisch erzeugt und root-only unter `/root/.sogo-db-credentials` gespeichert.
+Für ActiveSync und viele mobile Clients wird ein öffentlich vertrauenswürdiges TLS-Zertifikat benötigt. In KeyHelp kann der Server-FQDN über die SSL/TLS-Einstellungen für die Serverdienste mit einem Let's-Encrypt-Zertifikat abgesichert werden.
 
 ---
 
@@ -203,174 +177,59 @@ KeyHelp remains responsible for mail domains, mailboxes, Postfix, Dovecot, Rspam
 >
 > This project is not officially affiliated with KeyHelp, Keyweb or SOGo.
 >
-> The script was **created with the help of ChatGPT** and then practically tested by me on my own Debian 13 + KeyHelp test installation. There is no guarantee that it will continue to work unchanged with every KeyHelp/SOGo version or future update.
-
-## What the installer does
-
-The existing KeyHelp mail stack remains intact:
-
-- Postfix
-- Dovecot
-- Rspamd
-- MariaDB
-- Apache
-- domain and mailbox management through KeyHelp
-
-SOGo reads enabled KeyHelp mailboxes through a live SQL view on `keyhelp.mail_users`, so **no separate user synchronization job is required**. New enabled KeyHelp mailboxes are directly available in SOGo.
+> The script was **created with the help of ChatGPT** and then practically tested by me on my own Debian 13 + KeyHelp test installation.
 
 ## Installation profiles
 
-### 1. Minimal
-- Webmail
-- Calendar
-- Contacts
-
-### 2. Standard
-Additionally:
-- Sieve filters
-- Vacation / out-of-office
-- Forwarding
-
-### 3. Full
-Additionally:
-- Exchange ActiveSync
-- Apache endpoint `/Microsoft-Server-ActiveSync`
-
-### 4. Custom
-Choose optional features individually.
+1. Minimal – Webmail, calendar, contacts
+2. Standard – plus Sieve, vacation and forwarding
+3. Full – plus Exchange ActiveSync
+4. Custom – choose optional features individually
 
 ## Safety modes
 
-### Read-only system check
-
-Recommended before touching an existing production KeyHelp server:
-
 ```bash
 ./install.sh --check
-```
-
-This mode makes **no changes** and checks, among other things:
-
-- Debian 13
-- KeyHelp database and required `mail_users` columns
-- Apache, Postfix, Dovecot and MariaDB
-- existing SOGo packages/configuration
-- existing `sogo` database / DB user
-- TCP port 20000
-- Sieve port 4190
-- enabled KeyHelp mailbox count
-- server FQDN and currently served TLS certificate
-
-### Uninstall integration
-
-```bash
 ./install.sh --uninstall
 ```
 
-This removes the SOGo integration installed by this project while keeping **KeyHelp, Postfix, Dovecot, Rspamd, domains and mailboxes intact**.
+`--check` is read-only. `--uninstall` removes the SOGo integration while keeping the KeyHelp mail stack intact.
 
-Existing SOGo/Apache configuration and SOGo credentials are backed up again before removal. SOPE dependency libraries are intentionally not auto-removed.
+## Per-mailbox directory visibility
+
+`directory.sh` manages which KeyHelp mailboxes are eligible to appear in the SOGo shared directory.
+
+**Default is PRIVATE.** A mailbox is only marked visible after explicit opt-in.
+
+```bash
+chmod +x directory.sh
+./directory.sh init
+./directory.sh list
+./directory.sh show user@example.com
+./directory.sh hide secret@example.com
+./directory.sh status user@example.com
+```
+
+Target behavior:
+
+- `user@example.com` → visible inside its own SOGo domain
+- `secret@example.com` → private / hidden from the directory
+
+Important: per-mailbox visibility management is implemented, but **domain isolation is intentionally not enabled automatically yet**. SOGo multi-domain mode can affect internal user identifiers, so it should first be validated on a fresh test installation before becoming an installer default.
 
 ## Tested by me
 
-The integration was tested on a fresh test installation including:
-
-- Debian 13 (Trixie)
-- KeyHelp
-- Apache 2.4
-- Postfix 3.10
-- Dovecot 2.4
-- MariaDB 11
-- SOGo 5.12.x
-- `sogo-activesync`
-
-I successfully tested:
-
-- login with an existing KeyHelp mailbox
-- SOGo webmail
-- incoming mail via the existing KeyHelp/Postfix/Dovecot stack
-- outgoing mail via the existing KeyHelp/Postfix stack
-- calendar
-- contacts
-- Sieve / filters
-- vacation / out-of-office
-- forwarding
-- ActiveSync endpoint and authentication
-- mobile ActiveSync after switching the server certificate to a publicly trusted certificate
-- complete removal of SOGo followed by a fresh reinstall using this installer
-
-The installer completed the clean-install test including all health checks and correctly detected the existing KeyHelp mailboxes.
+Successfully tested on Debian 13 + KeyHelp with SOGo 5.12.x, including webmail, incoming/outgoing mail, calendar, contacts, Sieve, vacation, forwarding, ActiveSync and a complete uninstall/reinstall cycle.
 
 ## Installation
-
-KeyHelp must already be installed and working.
 
 ```bash
 git clone https://github.com/worker2000/debian13-keyhelp-SOGo.git
 cd debian13-keyhelp-SOGo
 chmod +x install.sh
-```
-
-Optionally run the read-only check first:
-
-```bash
 ./install.sh --check
-```
-
-Start installation:
-
-```bash
 ./install.sh
 ```
-
-At startup you can choose **Deutsch or English**. The installer then asks which installation profile should be used.
-
-## Authentication
-
-KeyHelp remains the source of truth for mail users:
-
-```text
-KeyHelp
-   |
-   +-- keyhelp.mail_users
-            |
-            +-- sogo_view
-                    |
-                    +-- SOGo
-```
-
-Users are not copied into a second user database.
-
-The tested KeyHelp installation uses bcrypt password hashes (`$2y$...`), which are integrated into SOGo using `blf-crypt`.
-
-## URLs
-
-SOGo:
-
-```text
-https://SERVER-FQDN/SOGo
-```
-
-With ActiveSync enabled:
-
-```text
-https://SERVER-FQDN/Microsoft-Server-ActiveSync
-```
-
-## TLS / Let's Encrypt
-
-A publicly trusted TLS certificate is required for ActiveSync and many mobile clients.
-
-KeyHelp can protect the server FQDN with a Let's Encrypt certificate through its SSL/TLS server-service certificate settings. Make sure the FQDN resolves publicly to the server first.
-
-## Notes
-
-- Create a backup/snapshot first.
-- On existing systems, run `./install.sh --check` first.
-- Test KeyHelp and SOGo updates on a non-production system first.
-- The installer does **not** install KeyHelp itself.
-- Existing SOGo/Apache configuration is backed up before replacement.
-- SOGo database credentials are generated automatically and stored root-only in `/root/.sogo-db-credentials`.
 
 ## Feedback
 
