@@ -54,6 +54,38 @@ Zusätzlich:
 ### 4. Benutzerdefiniert
 Optionale Funktionen können einzeln ausgewählt werden.
 
+## Neue Sicherheitsmodi
+
+### Nur prüfen – ohne Änderungen
+
+Vor allem für bestehende produktive KeyHelp-Systeme gedacht:
+
+```bash
+./install.sh --check
+```
+
+Der Check-Modus verändert **nichts** und prüft unter anderem:
+
+- Debian 13
+- KeyHelp-Datenbank und benötigte `mail_users`-Spalten
+- Apache, Postfix, Dovecot und MariaDB
+- vorhandene SOGo-Pakete und Konfigurationen
+- vorhandene `sogo`-Datenbank / DB-Benutzer
+- TCP-Port 20000
+- Sieve-Port 4190
+- Anzahl aktivierter KeyHelp-Mailboxen
+- Server-FQDN und das aktuell ausgelieferte TLS-Zertifikat
+
+### SOGo wieder entfernen
+
+```bash
+./install.sh --uninstall
+```
+
+Der Uninstall-Modus entfernt die durch dieses Projekt eingerichtete SOGo-Integration wieder und lässt **KeyHelp, Postfix, Dovecot, Rspamd, Domains und Mailboxen unangetastet**.
+
+Vor dem Entfernen werden vorhandene SOGo-/Apache-Konfigurationen und die SOGo-Zugangsdaten nochmals gesichert. SOPE-Abhängigkeitsbibliotheken werden absichtlich nicht automatisch entfernt.
+
 ## Von mir getestet
 
 Getestet wurde die Integration auf einer frischen Testinstallation mit unter anderem:
@@ -92,6 +124,17 @@ KeyHelp muss bereits installiert sein und funktionieren.
 git clone https://github.com/worker2000/debian13-keyhelp-SOGo.git
 cd debian13-keyhelp-SOGo
 chmod +x install.sh
+```
+
+Optional zuerst nur prüfen:
+
+```bash
+./install.sh --check
+```
+
+Installation starten:
+
+```bash
 ./install.sh
 ```
 
@@ -138,6 +181,7 @@ In KeyHelp kann der Server-FQDN über die SSL/TLS-Einstellungen für die Serverd
 ## Hinweise
 
 - Vorher Backup/Snapshot erstellen.
+- Auf Bestandssystemen zuerst `./install.sh --check` verwenden.
 - Updates von KeyHelp oder SOGo zuerst auf einem Testsystem prüfen.
 - Das Script installiert **nicht KeyHelp selbst**.
 - Bestehende SOGo-/Apache-Konfigurationen werden vor dem Überschreiben gesichert.
@@ -195,6 +239,38 @@ Additionally:
 ### 4. Custom
 Choose optional features individually.
 
+## Safety modes
+
+### Read-only system check
+
+Recommended before touching an existing production KeyHelp server:
+
+```bash
+./install.sh --check
+```
+
+This mode makes **no changes** and checks, among other things:
+
+- Debian 13
+- KeyHelp database and required `mail_users` columns
+- Apache, Postfix, Dovecot and MariaDB
+- existing SOGo packages/configuration
+- existing `sogo` database / DB user
+- TCP port 20000
+- Sieve port 4190
+- enabled KeyHelp mailbox count
+- server FQDN and currently served TLS certificate
+
+### Uninstall integration
+
+```bash
+./install.sh --uninstall
+```
+
+This removes the SOGo integration installed by this project while keeping **KeyHelp, Postfix, Dovecot, Rspamd, domains and mailboxes intact**.
+
+Existing SOGo/Apache configuration and SOGo credentials are backed up again before removal. SOPE dependency libraries are intentionally not auto-removed.
+
 ## Tested by me
 
 The integration was tested on a fresh test installation including:
@@ -233,6 +309,17 @@ KeyHelp must already be installed and working.
 git clone https://github.com/worker2000/debian13-keyhelp-SOGo.git
 cd debian13-keyhelp-SOGo
 chmod +x install.sh
+```
+
+Optionally run the read-only check first:
+
+```bash
+./install.sh --check
+```
+
+Start installation:
+
+```bash
 ./install.sh
 ```
 
@@ -279,6 +366,7 @@ KeyHelp can protect the server FQDN with a Let's Encrypt certificate through its
 ## Notes
 
 - Create a backup/snapshot first.
+- On existing systems, run `./install.sh --check` first.
 - Test KeyHelp and SOGo updates on a non-production system first.
 - The installer does **not** install KeyHelp itself.
 - Existing SOGo/Apache configuration is backed up before replacement.
